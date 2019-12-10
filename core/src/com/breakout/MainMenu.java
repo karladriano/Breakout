@@ -10,10 +10,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-/**
- *
- * @author sraven0
- */
 public class MainMenu implements Screen {
 
     BitmapFont font;
@@ -42,7 +38,7 @@ public class MainMenu implements Screen {
         game.batch.end();
 
         if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            game.setScreen(new GameScreen());
+            game.setScreen(new GameScreen(game));
             dispose();
         }
 
