@@ -18,101 +18,128 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class GameScreen implements Screen {
-    Game parent;
-    Stage stage;
-    World world;
-    Image ball, paddle;
-    Body ballBody, wallBody, floorBody, paddleBody;
-    HashMap<Body, Block> blocks;
-    final int scale = 32;
-    final double PADDLE_WIDTH = 3.125;
+	Game parent;
+	Stage stage;
+	World world;
+	Image ball, paddle, firstLife, secondLife, thirdLife;
+	Body ballBody, wallBody, floorBody, paddleBody;
+	HashMap<Body, Block> blocks;
+	final int scale = 32;
+	final double PADDLE_WIDTH = 3.125;
     final double Y_VELOCITY_LIMIT = 15;
+	int speed = 1, score = 0, size = 100, lives = 3, bounds = 50;
 
-    public GameScreen(Game parent) {
-        this.parent = parent;
-    }
+	public GameScreen(Game parent) {
+		this.parent = parent;
+	}
 
-    public void show() {
-        stage = new Stage();
-        blocks = new HashMap<>();
+	public void show() {
+		stage = new Stage();
+		blocks = new HashMap<>();
 
-        Texture ballTexture = new Texture("ball.png");
-        Texture tier1Block = new Texture("red_block.png");
-        Texture tier2Block = new Texture("orange_block.png");
-        Texture paddleTexture = new Texture("blue_pad.png");
+		Texture ballTexture = new Texture("ball.png");
+		Texture tier1Block = new Texture("red_block.png");
+		Texture tier2Block = new Texture("orange_block.png");
+		Texture paddleTexture = new Texture("blue_pad.png");
+		Texture heartTexture = new Texture("heart.png");
 
-        //An actor is a 2D graph node, which can have a position, rectangular size, origin, scale, etc.
-        ball = new Image(ballTexture);
-        stage.addActor(ball);
-        paddle = new Image(paddleTexture);
-        stage.addActor(paddle);
+		//An actor is a 2D graph node, which can have a position, rectangular size, origin, scale, etc.
+		ball = new Image(ballTexture);
+		stage.addActor(ball);
+		paddle = new Image(paddleTexture);
+		stage.addActor(paddle);
+		firstLife = new Image(heartTexture);
+		stage.addActor(firstLife);
+		secondLife = new Image(heartTexture);
+		stage.addActor(secondLife);
+		thirdLife = new Image(heartTexture);
+		stage.addActor(thirdLife);
 
-        final float screenWidth = Gdx.graphics.getWidth();
-        final float screenHeight = Gdx.graphics.getHeight();
-        final float blockWidth = tier1Block.getWidth();
-        final float blockHeight = tier1Block.getHeight();
+		final float screenWidth = Gdx.graphics.getWidth();
+		final float screenHeight = Gdx.graphics.getHeight();
+		final float blockWidth = tier1Block.getWidth();
+		final float blockHeight = tier1Block.getHeight();
 
-        world = new World(new Vector2(0, 0), true);
+		world = new World(new Vector2(0, 0), true);
 
-        for (float col = screenWidth / blockWidth; col >= 0; col--) {
-            for (float row = screenHeight / blockHeight / 2 - 1; row > 0; row--) {
-                Block block;
-                Image image;
-                Body blockBody;
-                float x = col * blockWidth;
-                float y = row * blockHeight + screenHeight / 2;
-                if ((int)(row % 2) == 1) {
-                    image = new Image(tier1Block);
-                    block = new Block(image, 1, x, y);
-                    blockBody = createRectBody(x, y, blockWidth, blockHeight);
-                    blocks.put(blockBody, block);
-                } else {
-                    image = new Image(tier2Block);
-                    block = new Block(image, 2, x, y);
-                    blockBody = createRectBody(x, y, blockWidth, blockHeight);
-                    blocks.put(blockBody, block);
-                }
-                image.setPosition(x, y);
-                stage.addActor(image);
-                blocks.put(blockBody, block);
-            }
-        }
-        ballBody = createBallBody(100, 100, ballTexture.getWidth()/2);
-        ballBody.setLinearVelocity(10, 10);
+		for (float col = screenWidth / blockWidth; col >= 0; col--) {
+			for (float row = screenHeight / blockHeight / 2 - 1; row > 0; row--) {
+				Block block;
+				Image image;
+				Body blockBody;
+				float x = col * blockWidth;
+				float y = row * blockHeight + screenHeight / 2;
+				if ((int)(row % 2) == 1) {
+					image = new Image(tier1Block);
+					block = new Block(image, 1, x, y);
+					blockBody = createRectBody(x, y, blockWidth, blockHeight);
+					blocks.put(blockBody, block);
+				} else {
+					image = new Image(tier2Block);
+					block = new Block(image, 2, x, y);
+					blockBody = createRectBody(x, y, blockWidth, blockHeight);
+					blocks.put(blockBody, block);
+				}
+				image.setPosition(x, y);
+				stage.addActor(image);
+				blocks.put(blockBody, block);
+			}
+		}
+		ballBody = createBallBody(100, 100, ballTexture.getWidth()/2);
+		ballBody.setLinearVelocity(10, 10);
 
-        wallBody = createRectBody(0, 0, screenWidth, screenHeight);
-        floorBody = createRectBody(0, 0, screenWidth, 1);
-        paddleBody = createRectBody(0, 0, blockWidth, blockHeight);
+		wallBody = createRectBody(0, 0, screenWidth, screenHeight);
+		floorBody = createRectBody(0, 0, screenWidth, 1);
+		paddleBody = createRectBody(0, 0, blockWidth, blockHeight);
 
-        Gdx.input.setInputProcessor(stage);
-        //Move the paddle along with the mouse only in the x axis
-        stage.addListener(new InputListener() {
-            public boolean handle(Event e) {
-                float x = Gdx.input.getX() - blockWidth / 2;
-                moveBody(paddleBody, x, 0);
-                return true;
-            }
-        });
+		Gdx.input.setInputProcessor(stage);
+		//Move the paddle along with the mouse only in the x axis
+		stage.addListener(new InputListener() {
+			public boolean handle(Event e) {
+				float x = Gdx.input.getX() - blockWidth / 2;
+				moveBody(paddleBody, x, 0);
+				return true;
+			}
+		});
 
-        //This is fired when the ball collides with an object
-        world.setContactListener(new ContactListener() {
-            public void beginContact(Contact c) {
-                Body b = c.getFixtureA().getBody();
-                Block block = blocks.get(b);
-                if (block != null) {
-                    //If block is of a higher tier, bump it down and change the texture
-                    if (block.tier >= 2) {
-                        block.tier--;
-                        block.image.setDrawable(new SpriteDrawable(new Sprite(new Texture("red_block.png"))));
-                    } //If the block is of the lowest tier, this block is destroyed
-                    else {
-                        block.image.remove();
-                    }
-                    //Fired when the user fails to get the ball with the paddle
-                } else if (b == floorBody) {
-                    //Restart the game
-                    show();
-                } else if (b == paddleBody) {
+		//This is fired when the ball collides with an object
+		world.setContactListener(new ContactListener() {
+			public void beginContact(Contact c) {
+				Body b = c.getFixtureA().getBody();
+				Block block = blocks.get(b);
+				if (block != null) {
+					//If block is of a higher tier, bump it down and change the texture
+					if (block.tier >= 2) {
+						block.tier--;
+						block.image.setDrawable(new SpriteDrawable(new Sprite(new Texture("red_block.png"))));
+					} //If the block is of the lowest tier, this block is destroyed
+					else {
+						block.image.remove();
+					}
+					score += 1;
+					speed += 1;
+					ballBody.setLinearVelocity(speed, 10);
+					if (ball.getWidth() != 5) {
+						ball.setSize(ball.getWidth() - 1, ball.getHeight() - 1);
+					}
+					ball.setBounds(bounds - 1, bounds - 1, ball.getWidth(), ball.getHeight());
+					//Fired when the user fails to get the ball with the paddle
+				} else if (b == floorBody) {
+					lives--;
+					if (lives == 2)
+					{
+						firstLife.remove();
+					}
+					else if (lives == 1)
+					{
+						secondLife.remove();
+					}
+					else {
+						//parent.setScreen(new GameOver(parent)));
+						System.out.println("Game over. Final score: " + score);
+						score = 0;
+					}
+				} else if (b == paddleBody) {
                     double paddleCenter = b.getWorldCenter().x;
                     double ballX = ballBody.getWorldCenter().x;
                     double dist = ballX - (PADDLE_WIDTH / 2 + paddleCenter);
@@ -123,105 +150,108 @@ public class GameScreen implements Screen {
                     float yVelocity = 20 - Math.abs(xVelocity);
                     ballBody.setLinearVelocity(xVelocity, Math.min(yVelocity, (float)Y_VELOCITY_LIMIT));
                 }
-            }
-            public void endContact(Contact c) {}
-            public void postSolve(Contact c, ContactImpulse ci) {}
-            public void preSolve(Contact c, Manifold m) {}
-        });
-    }
+			}
+			public void endContact(Contact c) {}
+			public void postSolve(Contact c, ContactImpulse ci) {}
+			public void preSolve(Contact c, Manifold m) {}
+		});
+	}
 
-    //Put the Objects on screen and destroy objects that do not have reference
-    //e.g. no longer being used
-    public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0, 0);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+	//Put the Objects on screen and destroy objects that do not have reference
+	//e.g. no longer being used
+	public void render(float delta) {
+		Gdx.gl.glClearColor(0, 0, 0, 0);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        world.step(delta, 10, 10);
-        paddle.setPosition(paddleBody.getPosition().x*scale, paddleBody.getPosition().y*scale);
-        ball.setPosition(ballBody.getPosition().x*scale, ballBody.getPosition().y*scale);
+		world.step(delta, 10, 10);
+		paddle.setPosition(paddleBody.getPosition().x*scale, paddleBody.getPosition().y*scale);
+		ball.setPosition(ballBody.getPosition().x*scale, ballBody.getPosition().y*scale);
+		firstLife.setPosition(Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 475);
+		secondLife.setPosition(Gdx.graphics.getWidth() - 75, Gdx.graphics.getHeight() - 475);
+		thirdLife.setPosition(Gdx.graphics.getWidth() - 50, Gdx.graphics.getHeight() - 475);	
 
-        Iterator iter = blocks.keySet().iterator();
-        while (iter.hasNext()) {
-            Body b = (Body) iter.next();
-            Block block = blocks.get(b);
-            if (!block.image.hasParent() && block.tier == 1) {
-                world.destroyBody(b);
-                iter.remove();
-            }
-        }
-        stage.act(delta);
-        stage.draw();
-    }
+		Iterator iter = blocks.keySet().iterator();
+		while (iter.hasNext()) {
+			Body b = (Body) iter.next();
+			Block block = blocks.get(b);
+			if (!block.image.hasParent() && block.tier == 1) {
+				world.destroyBody(b);
+				iter.remove();
+			}
+		}
+		stage.act(delta);
+		stage.draw();
+	}
 
-    public void dispose() {
-    }
+	public void dispose() {
+	}
 
-    public void hide() {
-    }
+	public void hide() {
+	}
 
-    public void pause() {
-    }
+	public void pause() {
+	}
 
-    public void resize(int width, int height) {
-    }
+	public void resize(int width, int height) {
+	}
 
-    public void resume() {
-    }
+	public void resume() {
+	}
 
-    //Create the ball
-    public Body createBallBody(float x, float y, float radius) {
-        x = x/scale;
-        y = y/scale;
-        radius = radius/scale;
+	//Create the ball
+	public Body createBallBody(float x, float y, float radius) {
+		x = x/scale;
+		y = y/scale;
+		radius = radius/scale;
 
-        BodyDef def = new BodyDef();
-        def.type = BodyDef.BodyType.DynamicBody;
-        def.position.set(x, y);
-        Body body = world.createBody(def);
+		BodyDef def = new BodyDef();
+		def.type = BodyDef.BodyType.DynamicBody;
+		def.position.set(x, y);
+		Body body = world.createBody(def);
 
-        CircleShape shape = new CircleShape();
-        shape.setRadius(radius);
-        shape.setPosition(new Vector2(radius, radius));
-        Fixture fixture = body.createFixture(shape, 1);
-        fixture.setFriction(0);
-        fixture.setRestitution(1);
-        shape.dispose();
+		CircleShape shape = new CircleShape();
+		shape.setRadius(radius);
+		shape.setPosition(new Vector2(radius, radius));
+		Fixture fixture = body.createFixture(shape, 1);
+		fixture.setFriction(0);
+		fixture.setRestitution(1);
+		shape.dispose();
 
-        return body;
-    }
+		return body;
+	}
 
-    //Helper function to create rectangles in the screen. This is used to create bounded boxes
-    //for the game screen, blocks and the paddle
-    public Body createRectBody(float x, float y, float width, float height) {
-        x = x/scale;
-        y = y/scale;
-        width = width/scale;
-        height = height/scale;
+	//Helper function to create rectangles in the screen. This is used to create bounded boxes
+	//for the game screen, blocks and the paddle
+	public Body createRectBody(float x, float y, float width, float height) {
+		x = x/scale;
+		y = y/scale;
+		width = width/scale;
+		height = height/scale;
 
-        BodyDef def = new BodyDef();
-        def.type = BodyDef.BodyType.StaticBody;
-        def.position.set(x, y);
-        Body body = world.createBody(def);
+		BodyDef def = new BodyDef();
+		def.type = BodyDef.BodyType.StaticBody;
+		def.position.set(x, y);
+		Body body = world.createBody(def);
 
-        ChainShape shape = new ChainShape();
-        float[] vertices = {
-                0, 0,
-                0, height,
-                width, height,
-                width, 0,
-                0, 0
-        };
-        shape.createChain(vertices);
-        body.createFixture(shape, 0.1f);
-        shape.dispose();
+		ChainShape shape = new ChainShape();
+		float[] vertices = {
+				0, 0,
+				0, height,
+				width, height,
+				width, 0,
+				0, 0
+		};
+		shape.createChain(vertices);
+		body.createFixture(shape, 1);
+		shape.dispose();
 
-        return body;
-    }
+		return body;
+	}
 
-    public void moveBody(Body body, float x, float y) {
-        x = x/scale;
-        y = y/scale;
+	public void moveBody(Body body, float x, float y) {
+		x = x/scale;
+		y = y/scale;
 
-        body.setTransform(x, y, 0);
-    }
+		body.setTransform(x, y, 0);
+	}
 }
