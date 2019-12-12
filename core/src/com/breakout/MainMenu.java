@@ -1,13 +1,10 @@
 package com.breakout;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class MainMenu implements Screen {
@@ -30,11 +27,12 @@ public class MainMenu implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        
         game.batch.begin();
-        game.font.draw(game.batch, "Welcome to Breakout", 100, 150);
-        game.font.draw(game.batch, "A small game by Min Ho Gang and Karl Adriano", 120, 130);
-        game.font.draw(game.batch, "Press any key to begin.", 120, 110);
+        game.font.getData().markupEnabled = true;
+        game.font.draw(game.batch, "Welcome to [#FFAA00]Breakout", 175, 300);
+        game.font.draw(game.batch, "A small game by [#FF0000]Min Ho Gang [#FFFFFF]and [#0000FF]Karl Adriano", 100, 250);
+        game.font.draw(game.batch, "Press any key to begin", 175, 200);
         game.batch.end();
 
         if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
