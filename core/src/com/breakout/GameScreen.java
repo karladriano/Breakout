@@ -2,7 +2,6 @@ package com.breakout;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -26,6 +25,8 @@ public class GameScreen implements Screen {
     Body ballBody, wallBody, floorBody, paddleBody;
     HashMap<Body, Block> blocks;
     final int scale = 32;
+    final double PADDLE_WIDTH = 3.125;
+    final double Y_VELOCITY_LIMIT = 15;
 
     public GameScreen(Game parent) {
         this.parent = parent;
@@ -111,6 +112,16 @@ public class GameScreen implements Screen {
                 } else if (b == floorBody) {
                     //Restart the game
                     show();
+                } else if (b == paddleBody) {
+                    double paddleCenter = b.getWorldCenter().x;
+                    double ballX = ballBody.getWorldCenter().x;
+                    double dist = ballX - (PADDLE_WIDTH / 2 + paddleCenter);
+                    if (Math.abs(dist) >= 0.95) {
+                        dist = dist < 0 ? -0.95 : 0.95;
+                    }
+                    float xVelocity = (float) dist * 15;
+                    float yVelocity = 20 - Math.abs(xVelocity);
+                    ballBody.setLinearVelocity(xVelocity, Math.min(yVelocity, (float)Y_VELOCITY_LIMIT));
                 }
             }
             public void endContact(Contact c) {}
@@ -201,7 +212,7 @@ public class GameScreen implements Screen {
                 0, 0
         };
         shape.createChain(vertices);
-        body.createFixture(shape, 1);
+        body.createFixture(shape, 0.1f);
         shape.dispose();
 
         return body;
