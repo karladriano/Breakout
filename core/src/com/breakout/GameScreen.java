@@ -141,6 +141,8 @@ public class GameScreen implements Screen {
 						score = 0;
 						lives = 3;
 						show();
+						Y_VELOCITY_LIMIT = 15;
+						MAX_SPEED = 20;
 					}
 				} else if (b == paddleBody) {
                     double paddleCenter = b.getWorldCenter().x;
