@@ -26,8 +26,9 @@ public class GameScreen implements Screen {
 	HashMap<Body, Block> blocks;
 	final int scale = 32;
 	final double PADDLE_WIDTH = 3.125;
-    final double Y_VELOCITY_LIMIT = 15;
-	int speed = 1, score = 0, size = 100, lives = 3, bounds = 50;
+    float Y_VELOCITY_LIMIT = 15;
+    float MAX_SPEED = 20;
+	int score = 0, lives = 3, bounds = 50;
 
 	public GameScreen(Game parent) {
 		this.parent = parent;
@@ -117,8 +118,9 @@ public class GameScreen implements Screen {
 						block.image.remove();
 					}
 					score += 1;
-					speed += 1;
-					ballBody.setLinearVelocity(speed, 10);
+					MAX_SPEED += 1;
+					Y_VELOCITY_LIMIT = 0.75f * MAX_SPEED;
+//					ballBody.setLinearVelocity(speed, 10);
 					if (ball.getWidth() != 5) {
 						ball.setSize(ball.getWidth() - 1, ball.getHeight() - 1);
 					}
@@ -135,9 +137,10 @@ public class GameScreen implements Screen {
 						secondLife.remove();
 					}
 					else {
-						//parent.setScreen(new GameOver(parent)));
 						System.out.println("Game over. Final score: " + score);
 						score = 0;
+						lives = 3;
+						show();
 					}
 				} else if (b == paddleBody) {
                     double paddleCenter = b.getWorldCenter().x;
@@ -146,9 +149,9 @@ public class GameScreen implements Screen {
                     if (Math.abs(dist) >= 0.95) {
                         dist = dist < 0 ? -0.95 : 0.95;
                     }
-                    float xVelocity = (float) dist * 15;
-                    float yVelocity = 20 - Math.abs(xVelocity);
-                    ballBody.setLinearVelocity(xVelocity, Math.min(yVelocity, (float)Y_VELOCITY_LIMIT));
+                    float xVelocity = (float) dist * (0.75f * MAX_SPEED);
+                    float yVelocity = MAX_SPEED - Math.abs(xVelocity);
+                    ballBody.setLinearVelocity(xVelocity, Math.min(yVelocity, Y_VELOCITY_LIMIT));
                 }
 			}
 			public void endContact(Contact c) {}
